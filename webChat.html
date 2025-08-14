@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GemAI - Chat</title>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <!-- Google Fonts for a modern look -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* General styling from the original CSS file for consistency */
+        :root {
+            --primary-color: #0fa9b4;
+            --primary-light: #9be7d6;
+            --secondary-color: #4a90e2;
+            --bg-light: #f9f7f7;
+            --bg-white: #ffffff;
+            --text-dark: #333;
+            --text-light: #666;
+            --border-color: #e0e0e0;
+            --chat-bg: #f4f7f9;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        html,
+        body {
+            height: 100%;
+            overflow: hidden; /* Prevent scrollbars from the main page */
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            color: var(--text-dark);
+            background-color: var(--bg-light);
+            position: relative; /* Needed for absolute positioning of children */
+        }
+
+        /* Navigation bar styling from original CSS */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: var(--bg-white);
+            padding: 8px 5%;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            flex-shrink: 0; /* Prevent nav from shrinking */
+        }
+
+        .logo {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .logo i {
+            font-size: 32px;
+            margin-right: 12px;
+        }
+
+        nav ul {
+            display: flex;
+            gap: 30px;
+        }
+
+        nav li {
+            list-style: none;
+        }
+
+        nav a {
+            color: var(--text-dark);
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 22px;
+            transition: all 0.3s;
+            padding: 5px 10px;
+        }
+
+        nav a:hover {
+            color: var(--primary-color);
+        }
+
+        /* Main content wrapper */
+        .main-content {
+            flex-grow: 1;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* Hero Visual Element Styles (background shapes) */
+        .hero-visual {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1; /* Behind the chat container */
+        }
+
+        .shape {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(50px); /* Increased blur for softer effect */
+            opacity: 0.5;
+        }
+
+        .shape-1 {
+            width: 400px;
+            height: 400px;
+            background-color: var(--primary-light);
+            top: 5%;
+            left: 10%;
+            animation: float 12s infinite ease-in-out;
+        }
+
+        .shape-2 {
+            width: 350px;
+            height: 350px;
+            background-color: var(--secondary-color);
+            top: 40%;
+            left: 50%;
+            animation: float 15s infinite ease-in-out reverse;
+        }
+
+        .shape-3 {
+            width: 300px;
+            height: 300px;
+            background-color: #ffda79;
+            bottom: 5%;
+            left: 25%;
+            opacity: 0.3;
+            animation: float 10s infinite ease-in-out;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) translateX(0); }
+            50% { transform: translateY(-40px) translateX(30px) scale(1.1); }
+        }
+
+        /* Main chat container styling */
+        .chat-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            max-width: 900px;
+            width: 90%;
+            height: calc(100vh - 200px); /* Adjust height based on nav and footer */
+            max-height: 850px;
+            margin: 20px auto;
+            background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent background */
+            backdrop-filter: blur(10px); /* Frosted glass effect */
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            z-index: 2; /* In front of the shapes */
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Chat header styling */
+        .chat-header {
+            background: rgba(15, 169, 180, 0.8); /* Semi-transparent header */
+            color: white;
+            padding: 15px 20px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: space-between; /* Align items with space between */
+            flex-shrink: 0;
+        }
+
+        .chat-header .title {
+            display: flex;
+            align-items: center;
+        }
+
+        .chat-header .title i {
+            margin-right: 15px;
+        }
+
+        .header-buttons button {
+            background: none;
+            border: 1px solid white;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            margin-left: 10px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .header-buttons button:hover {
+            background-color: white;
+            color: var(--primary-color);
+        }
+
+        /* Chat box for messages */
+        #chat-box {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background-color: transparent; /* Make chat box transparent */
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            max-width: 85%;
+            padding: 12px 18px;
+            border-radius: 18px;
+            line-height: 1.5;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .message .icon {
+            flex-shrink: 0;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .message .text {
+            padding-top: 8px;
+        }
+
+        /* User message styling */
+        .user-message {
+            align-self: flex-end;
+            background-color: var(--primary-color);
+            color: white;
+            border-bottom-right-radius: 4px;
+            flex-direction: row-reverse;
+        }
+
+        .user-message .icon {
+            background-color: var(--secondary-color);
+        }
+
+        /* Bot message styling */
+        .bot-message {
+            align-self: flex-start;
+            background-color: var(--bg-white);
+            color: var(--text-dark);
+            border: 1px solid var(--border-color);
+            border-bottom-left-radius: 4px;
+        }
+
+        .bot-message.summary {
+            background-color: var(--primary-light);
+            border-color: var(--primary-color);
+        }
+
+        .bot-message .icon {
+            background-color: var(--primary-color);
+        }
+
+        /* Typing indicator styling */
+        #typing-indicator {
+            align-items: center; /* Vertically center the icon and the text container */
+        }
+
+        #typing-indicator .text {
+            padding-top: 0; /* Remove padding to ensure proper alignment */
+        }
+
+        .typing-indicator-dots {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .typing-indicator-dots span {
+            height: 8px;
+            width: 8px;
+            background-color: #aaa;
+            border-radius: 50%;
+            display: inline-block;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+
+        .typing-indicator-dots span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-indicator-dots span:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1.0); }
+        }
+
+        /* Chat input form styling */
+        #chat-form {
+            display: flex;
+            padding: 20px;
+            border-top: 1px solid var(--border-color);
+            background-color: rgba(255, 255, 255, 0.7); /* Semi-transparent */
+            flex-shrink: 0;
+        }
+
+        #chat-input {
+            flex-grow: 1;
+            border: 1px solid var(--border-color);
+            border-radius: 50px;
+            padding: 12px 20px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.3s;
+            background-color: var(--bg-white);
+        }
+
+        #chat-input:focus {
+            border-color: var(--primary-color);
+        }
+
+        #send-button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 1.2rem;
+            margin-left: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #send-button:hover {
+            background-color: #0c8a94;
+            transform: scale(1.1);
+        }
+
+        #send-button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            transform: scale(1);
+        }
+
+        /* Footer styling from original CSS */
+        footer {
+            text-align: center;
+            padding: 20px 0;
+            background-color: #f1f1f1;
+            font-size: 14px;
+            color: #666;
+            flex-shrink: 0; /* Prevent footer from shrinking */
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+<!-- Navigation Bar -->
+<nav>
+    <a href="index.html" class="logo"><i class="fa-solid fa-brain"></i> GemAI</a>
+    <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="index.html#price">Price</a></li>
+        <li><a href="login.html">Sign-up</a></li>
+        <li><a href="login.html">Login</a></li>
+    </ul>
+</nav>
+
+<!-- Main Content Area -->
+<div class="main-content">
+    <!-- Background Animated Shapes -->
+    <div class="hero-visual">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+    </div>
+
+    <!-- Chat Container -->
+    <div class="chat-container">
+        <div class="chat-header">
+            <div class="title">
+                <i class="fa-solid fa-robot"></i>
+                <span>AI Assistant</span>
+            </div>
+            <div class="header-buttons">
+<!--                <button id="suggest-topic-btn">✨ Suggest a topic</button>-->
+                <button id="summarize-btn">✨ Summarize</button>
+            </div>
+        </div>
+        <div id="chat-box">
+            <!-- Initial bot message -->
+            <div class="message bot-message">
+                <div class="icon"><i class="fa-solid fa-robot"></i></div>
+                <p class="text">Hello! How can I help you today? Try asking me for a topic suggestion!</p>
+            </div>
+        </div>
+        <form id="chat-form">
+            <input type="text" id="chat-input" placeholder="Type your message..." autocomplete="off" required />
+            <button type="submit" id="send-button" aria-label="Send Message">
+                <i class="fa-solid fa-paper-plane"></i>
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer>
+    <p>© 2025 GemAI. All Rights Reserved.</p>
+</footer>
+
+<script>
+    // DOM element references
+    const chatBox = document.getElementById('chat-box');
+    const chatForm = document.getElementById('chat-form');
+    const chatInput = document.getElementById('chat-input');
+    const sendButton = document.getElementById('send-button');
+    const suggestTopicBtn = document.getElementById('suggest-topic-btn');
+    const summarizeBtn = document.getElementById('summarize-btn');
+
+    // History of the conversation
+    let chatHistory = [];
+
+    /**
+     * Appends a message to the chat box.
+     * @param {string} text - The message text.
+     * @param {string} sender - 'user' or 'bot'.
+     * @param {boolean} isSummary - Whether the message is a summary.
+     */
+    function appendMessage(text, sender, isSummary = false) {
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message', `${sender}-message`);
+        if (isSummary) {
+            messageDiv.classList.add('summary');
+        }
+
+        const iconDiv = document.createElement('div');
+        iconDiv.classList.add('icon');
+        const icon = document.createElement('i');
+        icon.classList.add('fa-solid', sender === 'user' ? 'fa-user' : 'fa-robot');
+        iconDiv.appendChild(icon);
+
+        const textP = document.createElement('p');
+        textP.classList.add('text');
+        textP.textContent = text;
+
+        messageDiv.appendChild(iconDiv);
+        messageDiv.appendChild(textP);
+
+        chatBox.appendChild(messageDiv);
+        scrollToBottom();
+    }
+
+    /**
+     * Shows or hides the typing indicator for the bot.
+     * @param {boolean} show - Whether to show the indicator.
+     */
+    function showTypingIndicator(show) {
+        let indicator = document.getElementById('typing-indicator');
+        if (show) {
+            if (!indicator) {
+                indicator = document.createElement('div');
+                indicator.id = 'typing-indicator';
+                indicator.classList.add('message', 'bot-message');
+                indicator.innerHTML = `
+                        <div class="icon"><i class="fa-solid fa-robot"></i></div>
+                        <div class="text">
+                            <div class="typing-indicator-dots">
+                                <span></span><span></span><span></span>
+                            </div>
+                        </div>
+                    `;
+                chatBox.appendChild(indicator);
+                scrollToBottom();
+            }
+        } else {
+            if (indicator) {
+                indicator.remove();
+            }
+        }
+    }
+
+
+    /**
+     * Scrolls the chat box to the bottom.
+     */
+    function scrollToBottom() {
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    /**
+     * Handles the chat form submission.
+     * @param {Event} event - The form submission event.
+     */
+    async function handleChatSubmit(event) {
+        event.preventDefault();
+        const userInput = chatInput.value.trim();
+
+        if (!userInput) return;
+
+        // Disable form while processing
+        chatInput.value = '';
+        chatInput.disabled = true;
+        sendButton.disabled = true;
+
+        // Display user's message
+        appendMessage(userInput, 'user');
+
+        // Add user message to history
+        chatHistory.push({ role: "user", parts: [{ text: userInput }] });
+
+        // Show typing indicator
+        showTypingIndicator(true);
+
+        try {
+            // Call the Gemini API
+            const botResponse = await getBotResponse(chatHistory);
+
+            // Add bot response to history
+            chatHistory.push({ role: "model", parts: [{ text: botResponse }] });
+
+            // Remove typing indicator and display bot's message
+            showTypingIndicator(false);
+            appendMessage(botResponse, 'bot');
+
+        } catch (error) {
+            console.error("Error fetching bot response:", error);
+            showTypingIndicator(false);
+            appendMessage("Sorry, something went wrong. Please try again.", 'bot');
+        } finally {
+            // Re-enable form
+            chatInput.disabled = false;
+            sendButton.disabled = false;
+            chatInput.focus();
+        }
+    }
+
+    /**
+     * Fetches a response from the Gemini API.
+     * @param {Array} history - The conversation history.
+     * @returns {Promise<string>} The bot's response text.
+     */
+    async function getBotResponse(history) {
+        const apiKey = "AIzaSyCBL_xeWYkdq4QhB15WQ_X9DQfMBOf-_po";
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+        const payload = {
+            contents: history,
+            generationConfig: {
+                temperature: 0.7,
+                topP: 0.95,
+                maxOutputTokens: 1024,
+            },
+        };
+
+        const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+            throw new Error(`API request failed with status ${response.status}`);
+        }
+
+        const result = await response.json();
+
+        if (result.candidates && result.candidates.length > 0 &&
+            result.candidates[0].content && result.candidates[0].content.parts &&
+            result.candidates[0].content.parts.length > 0) {
+            return result.candidates[0].content.parts[0].text;
+        } else {
+            return "I'm not sure how to respond to that.";
+        }
+    }
+
+    /**
+     * Handles the "Suggest a topic" button click.
+     */
+    async function handleSuggestTopic() {
+        suggestTopicBtn.disabled = true;
+        const prompt = "Suggest a fun and interesting conversation starter.";
+
+        showTypingIndicator(true);
+        try {
+            // We pass a new history here so it doesn't get confused by the current chat
+            const topic = await getBotResponse([{ role: "user", parts: [{ text: prompt }] }]);
+            chatInput.value = topic;
+            chatInput.focus();
+        } catch (error) {
+            console.error("Error suggesting topic:", error);
+            appendMessage("I couldn't think of a topic right now. Try again!", 'bot');
+        } finally {
+            showTypingIndicator(false);
+            suggestTopicBtn.disabled = false;
+        }
+    }
+
+    /**
+     * Handles the "Summarize" button click.
+     */
+    async function handleSummarize() {
+        if (chatHistory.length < 2) {
+            appendMessage("There's not enough conversation to summarize yet!", 'bot');
+            return;
+        }
+
+        summarizeBtn.disabled = true;
+        // Construct a new history with the summary prompt
+        const summaryHistory = [
+            ...chatHistory,
+            { role: "user", parts: [{ text: "Please summarize the conversation so far concisely." }] }
+        ];
+
+        showTypingIndicator(true);
+        try {
+            const summary = await getBotResponse(summaryHistory);
+            appendMessage("Here's a summary of our chat:\n\n" + summary, 'bot', true);
+            // We don't add the summary to the main chat history to avoid summarizing the summary later
+        } catch (error) {
+            console.error("Error summarizing conversation:", error);
+            appendMessage("I couldn't summarize the conversation. Please try again.", 'bot');
+        } finally {
+            showTypingIndicator(false);
+            summarizeBtn.disabled = false;
+        }
+    }
+
+    // Add event listeners
+    chatForm.addEventListener('submit', handleChatSubmit);
+    suggestTopicBtn.addEventListener('click', handleSuggestTopic);
+    summarizeBtn.addEventListener('click', handleSummarize);
+
+    // Initial focus on the input
+    chatInput.focus();
+
+</script>
+</body>
+</html>
